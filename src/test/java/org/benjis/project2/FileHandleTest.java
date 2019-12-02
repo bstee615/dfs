@@ -13,13 +13,13 @@ public class FileHandleTest {
      */
     @Test
     public void fileHandleTest() {
-        filehandle fh1, fh2;
+        FileHandle fh1, fh2;
 
-        fh1 = new filehandle();
+        fh1 = new FileHandle();
 
         assertTrue(fh1.isAlive());
 
-        fh2 = new filehandle();
+        fh2 = new FileHandle();
         assertTrue(fh2.isAlive());
 
         assertTrue(!fh1.Equals(fh2));

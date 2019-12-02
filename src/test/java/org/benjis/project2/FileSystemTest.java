@@ -26,10 +26,10 @@ public class FileSystemTest {
 		 * version.
 		 */
 
-		fileSystemAPI fs = new fileSystem();
+		FileSystemAPI fs = new FileSystem();
 
 		String url = "127.0.0.1:7777/" + fileName;
-		filehandle fh = fs.open(url);
+		FileHandle fh = fs.open(url);
 
 		System.out.println("Start reading file...");
 		while (!fs.isEOF(fh)) {

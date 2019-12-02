@@ -2,7 +2,7 @@ package org.benjis.project2;
 
 /* You can change implementation as you like. This is a simple one. */
 
-public class filehandle {
+public class FileHandle {
     /*
      * The "filehandle" is simply an integer. We keep a counter in a static variable
      * "cnt" so that no duplication occurs. When filehandle is discarded its number
@@ -12,7 +12,7 @@ public class filehandle {
     private int index;
     private static int cnt = 1;
 
-    public filehandle() {
+    public FileHandle() {
         index = cnt++;
     }
 
@@ -21,7 +21,7 @@ public class filehandle {
     }
 
     /* checks two handles are equal or not. */
-    public boolean Equals(filehandle fh) {
+    public boolean Equals(FileHandle fh) {
         return (fh.index == this.index);
     }
 

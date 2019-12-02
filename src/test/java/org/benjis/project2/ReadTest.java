@@ -22,9 +22,9 @@ public class ReadTest {
 		 * version.
 		 */
 
-		fileSystemAPI fs = new fileSystem();
+		FileSystemAPI fs = new FileSystem();
 
-		filehandle fh = fs.open(Filename);
+		FileHandle fh = fs.open(Filename);
 
 		long startTime, endTime;
 		long turnAround;
