@@ -1,16 +1,38 @@
 package org.benjis.project2;
 
+import java.util.Hashtable;
+
 public class NetworkFileSystem implements FileSystemAPI {
+  private Hashtable<FileHandle, NFSUrl> fhToUrl;
+
+  private class NFSUrl {
+    public String ip;
+    public String port;
+    public String path;
+
+    public NFSUrl(String url) {
+      int colonIndex = url.indexOf(":");
+      int slashIndex = url.indexOf("/");
+      String ip = url.substring(0, colonIndex);
+      String port = url.substring(colonIndex + 1, slashIndex);
+      String path = url.substring(slashIndex + 1);
+
+      // TODO: Check format
+
+      this.ip = ip;
+      this.port = port;
+      this.path = path;
+    }
+  }
 
   // url format is "ip:port/path"
   public FileHandle open(String url) throws java.io.FileNotFoundException {
-    int colonIndex = url.indexOf(":");
-    int slashIndex = url.indexOf("/");
-    String ip = url.substring(0, colonIndex);
-    String port = url.substring(colonIndex + 1, slashIndex);
-    String path = url.substring(slashIndex + 1);
-    // TODO: Check format
-    return new NetworkFileHandle(ip, port, path);
+    FileHandle fh = new FileHandle();
+    NFSUrl nfsUrl = new NFSUrl(url);
+
+    fhToUrl.put(fh, nfsUrl);
+
+    return fh;
   }
 
   /* write is not implemented. */
