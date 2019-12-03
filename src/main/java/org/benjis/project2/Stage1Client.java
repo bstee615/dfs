@@ -10,7 +10,7 @@ public class Stage1Client {
             FileHandle fh = api.open("localhost:6666/testfile.txt");
             System.out.println(fh.toString());
 
-            byte[] inData = new byte[43]; // Read the first line only
+            byte[] inData = new byte[45]; // Read the first line only
             int bytesRead = api.read(fh, inData);
             System.out.println("Read " + bytesRead + " bytes of data: \"" + new String(inData) + "\"");
 

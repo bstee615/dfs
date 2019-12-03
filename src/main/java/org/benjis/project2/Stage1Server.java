@@ -3,6 +3,8 @@ package org.benjis.project2;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -44,13 +46,43 @@ class Server {
         in.getChannel().position(req.position);
         byte[] data = new byte[req.n];
         int bytesRead = in.read(data);
+        if (bytesRead == -1)
+            bytesRead = 0;
         in.close();
 
         return new ReadFileResponse(bytesRead, data);
     }
 
-    private WriteFileResponse handle(WriteFileRequest req) {
-        throw new UnsupportedOperationException("not implemented");
+    private boolean writeHelper(WriteFileRequest req) throws IOException {
+        File file = new File(req.path);
+        if (!file.exists()) {
+            return false;
+        }
+
+        try {
+            // Save current file contents
+            FileInputStream in = new FileInputStream(file);
+            byte[] fileContents = new byte[(int) file.length()];
+            int contentsSaved = in.read(fileContents);
+            if (contentsSaved < req.position) {
+                return false;
+            }
+            in.close();
+
+            FileOutputStream out = new FileOutputStream(file);
+            out.write(fileContents, 0, req.position - 1);
+            out.write(req.data);
+            out.write(fileContents, req.position + req.length, fileContents.length - (req.position + req.length));
+            out.close();
+
+            return true;
+        } catch (FileNotFoundException ex) {
+            return false;
+        }
+    }
+
+    private WriteFileResponse handle(WriteFileRequest req) throws IOException {
+        return new WriteFileResponse(writeHelper(req));
     }
 
     private LookupFileResponse handle(LookupFileRequest req) {
@@ -102,27 +134,27 @@ class Server {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             in = new ObjectInputStream(clientSocket.getInputStream());
 
+            // try {
+            Object o = null;
+            // Read objects until they stop sending them.
             try {
-                Object o = null;
-                // Read objects until they stop sending them.
-                try {
-                    // while
-                    if (/* clientSocket.isConnected() && */(o = in.readObject()) != null) {
-                        ClientMessage m = (ClientMessage) o;
-                        handle(m);
-                    }
-                } catch (ClassNotFoundException ex) {
-                    System.out.println(ex.getMessage());
+                // while
+                if (/* clientSocket.isConnected() && */(o = in.readObject()) != null) {
+                    ClientMessage m = (ClientMessage) o;
+                    handle(m);
                 }
-
-                System.out.println("Client disconnected. Accepting connections...");
+            } catch (ClassNotFoundException ex) {
+                System.out.println(ex.getMessage());
             }
+
+            System.out.println("Client disconnected. Accepting connections...");
+            // }
             // catch (SocketException ex) {
-            //     if (ex.getMessage().equals("Connection reset")) {
-            //         // Silently reset for a new client
-            //     } else {
-            //         throw ex;
-            //     }
+            // if (ex.getMessage().equals("Connection reset")) {
+            // // Silently reset for a new client
+            // } else {
+            // throw ex;
+            // }
             // }
 
             in.close();

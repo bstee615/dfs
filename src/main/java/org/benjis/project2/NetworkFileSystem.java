@@ -116,6 +116,7 @@ public class NetworkFileSystem implements FileSystemAPI {
   public boolean write(FileHandle fh, byte[] data) throws IOException {
     FileData fileData = getFileData(fh);
     Socket sock = getSocket(fileData);
+    boolean success;
 
     try {
       WriteFileRequest outData = new WriteFileRequest(fileData.path, data, fileData.position, data.length);
@@ -123,14 +124,20 @@ public class NetworkFileSystem implements FileSystemAPI {
 
       WriteFileResponse inData = readFromSock(sock);
 
-      return inData.success;
+      success = inData.success;
     } catch (IOException ex) {
       System.out.println("write(): network error");
-      return false;
+      success = false;
     } finally {
       if (sock != null)
         sock.close();
     }
+
+    if (success) {
+      fileData.position += data.length;
+    }
+
+    return success;
   }
 
   /* read bytes from the current position. returns the number of bytes read. */
@@ -145,6 +152,7 @@ public class NetworkFileSystem implements FileSystemAPI {
 
     sock.close();
     System.arraycopy(inData.data, 0, data, 0, inData.bytesRead);
+    fileData.position += inData.bytesRead;
     return inData.bytesRead;
   }
 
