@@ -25,6 +25,7 @@ public class NetworkFileSystem implements FileSystemAPI {
     public String path;
 
     public int position;
+    public int length;
 
     public FileData(String url) {
       int colonIndex = url.indexOf(":");
@@ -39,6 +40,7 @@ public class NetworkFileSystem implements FileSystemAPI {
       this.path = path;
 
       this.position = 0;
+      this.length = 0;
     }
 
     public Socket getSocket() throws IOException {
@@ -78,6 +80,7 @@ public class NetworkFileSystem implements FileSystemAPI {
       LookupFileResponse inData = readFromSock(sock);
 
       if (inData.exists) {
+        fileData.length = inData.size;
         FileHandle fh = new FileHandle();
         fileHandlesToData.put(fh, fileData);
         return fh;
@@ -142,6 +145,9 @@ public class NetworkFileSystem implements FileSystemAPI {
 
   /* check if it is the end-of-file. */
   public boolean isEOF(FileHandle fh) throws IOException {
-    throw new UnsupportedOperationException("Not implemented.");
+    FileData fileData = fileHandlesToData.get(fh);
+    // TODO: Make sure this is equal only,
+    // otherwise we'll probably have an error sometime.
+    return fileData.position >= fileData.length;
   }
 }

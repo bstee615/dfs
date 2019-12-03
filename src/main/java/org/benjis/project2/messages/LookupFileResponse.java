@@ -7,5 +7,5 @@ public class LookupFileResponse implements Serializable {
     private static final long serialVersionUID = 1L;
     public Date lastModifiedTime;
     public boolean exists;
-    int size;
+    public int size;
 }
