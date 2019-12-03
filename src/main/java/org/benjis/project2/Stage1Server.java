@@ -1,21 +1,16 @@
 package org.benjis.project2;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -61,18 +56,25 @@ class Server {
 
         try {
             // Save current file contents
-            FileInputStream in = new FileInputStream(file);
-            byte[] fileContents = new byte[(int) file.length()];
-            int contentsSaved = in.read(fileContents);
-            if (contentsSaved < req.position) {
-                return false;
+            FileInputStream in = null;
+            byte[] fileContents;
+            try {
+                in = new FileInputStream(file);
+                fileContents = new byte[(int) file.length()];
+                int bytesSaved = in.read(fileContents);
+                if (bytesSaved < req.position - 1) {
+                    return false;
+                }
+            } finally {
+                in.close();
             }
-            in.close();
 
             FileOutputStream out = new FileOutputStream(file);
             out.write(fileContents, 0, req.position - 1);
             out.write(req.data);
-            out.write(fileContents, req.position + req.length, fileContents.length - (req.position + req.length));
+            if (req.position + req.length < fileContents.length) {
+                out.write(fileContents, req.position + req.length, fileContents.length - (req.position + req.length));
+            }
             out.close();
 
             return true;
@@ -82,7 +84,14 @@ class Server {
     }
 
     private WriteFileResponse handle(WriteFileRequest req) throws IOException {
-        return new WriteFileResponse(writeHelper(req));
+        System.out.println("Writing \"" + new String(req.data) + "\" to " + req.path);
+        boolean success = writeHelper(req);
+        if (success) {
+            System.out.println("success");
+        } else {
+            System.out.println("failure");
+        }
+        return new WriteFileResponse(success);
     }
 
     private LookupFileResponse handle(LookupFileRequest req) {
@@ -119,7 +128,7 @@ class Server {
 
         if (response != null) {
             out.writeObject(response);
-            System.out.println("wrote response");
+            // System.out.println("wrote response");
         }
     }
 
