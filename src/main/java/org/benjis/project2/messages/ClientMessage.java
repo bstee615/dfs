@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 public class ClientMessage implements Serializable {
     private static final long serialVersionUID = 1L;
-    String verb;
-    Object obj;
+    public String verb;
+    public Object obj;
 
     public ClientMessage(ReadFileRequest o) {
         this.verb = "read";
