@@ -3,21 +3,23 @@ package org.benjis.project2;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
-import java.net.URL;
-import java.net.URLConnection;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Hashtable;
 
 public class NetworkFileSystem implements FileSystemAPI {
   private Hashtable<FileHandle, FileData> fhToUrl;
 
   private class FileData {
-    public String ip;
-    public String port;
+    public InetSocketAddress ip;
     public String path;
 
     public int position;
@@ -25,17 +27,20 @@ public class NetworkFileSystem implements FileSystemAPI {
     public FileData(String url) {
       int colonIndex = url.indexOf(":");
       int slashIndex = url.indexOf("/");
-      String ip = url.substring(0, colonIndex);
-      String port = url.substring(colonIndex + 1, slashIndex);
+
+      String addr = url.substring(0, colonIndex);
+      int port = Integer.parseInt(url.substring(colonIndex + 1, slashIndex));
+      this.ip = new InetSocketAddress(addr, port);
+
       String path = url.substring(slashIndex + 1);
-
       // TODO: Check format
-
-      this.ip = ip;
-      this.port = port;
       this.path = path;
 
       this.position = 0;
+    }
+
+    public Socket getSocket() throws IOException {
+      return new Socket(ip.getAddress(), ip.getPort());
     }
   }
 
@@ -49,43 +54,89 @@ public class NetworkFileSystem implements FileSystemAPI {
     return fh;
   }
 
-  private URLConnection getURLConnection(FileData fileData) throws IOException {
-    URL netUrl = new URL(fileData.ip + ":" + fileData.port + "/" + fileData.path);
+  private class WriteFileRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
+    public String path;
+    public byte[] data;
 
-    URLConnection con = netUrl.openConnection();
-    con.setDoOutput(true);
-    return con;
+    public WriteFileRequest(String path, byte[] data) {
+      this.path = path;
+      this.data = data;
+    }
+  }
+
+  private class WriteFileResponse implements Serializable {
+    private static final long serialVersionUID = 1L;
+    public boolean success;
+  }
+
+  private class ReadFileRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
+    public String path;
+
+    public ReadFileRequest(String path) {
+      this.path = path;
+    }
+  }
+
+  private class ReadFileResponse implements Serializable {
+    private static final long serialVersionUID = 1L;
+    public int bytesRead;
+    public byte[] data;
+  }
+
+  private void writeToSock(Socket sock, Object o) throws IOException {
+    ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
+    out.writeObject(o);
+    // out.close();
+  }
+
+  private Object readFromSock(Socket sock) throws IOException {
+    ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
+    try {
+      return in.readObject();
+    } catch (ClassNotFoundException ex) {
+      System.out.println(ex.getMessage());
+      return null;
+    }
+    // finally {
+    // in.close();
+    // }
   }
 
   /* write is not implemented. */
   public boolean write(FileHandle fh, byte[] data) throws IOException {
     FileData fileData = fhToUrl.get(fh);
-    URLConnection con = getURLConnection(fileData);
+    Socket sock = fileData.getSocket();
 
     try {
-      BufferedWriter outWriter = new BufferedWriter(new OutputStreamWriter(con.getOutputStream()));
-      InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(data));
-      int c;
+      WriteFileRequest outData = new WriteFileRequest(fileData.path, data);
+      writeToSock(sock, outData);
 
-      while ((c = reader.read()) != -1) {
-        outWriter.write(c);
-      }
+      WriteFileResponse inData = (WriteFileResponse) readFromSock(sock);
 
-      outWriter.close();
-      reader.close();
+      return inData.success;
     } catch (IOException ex) {
+      System.out.println("write(): network error");
       return false;
+    } finally {
+      sock.close();
     }
-
-    return true;
   }
 
   /* read bytes from the current position. returns the number of bytes read. */
   public int read(FileHandle fh, byte[] data) throws IOException {
     FileData fileData = fhToUrl.get(fh);
-    URLConnection con = getURLConnection(fileData);
+    Socket sock = fileData.getSocket();
 
-    return con.getInputStream().read(data);
+    ReadFileRequest outData = new ReadFileRequest(fileData.path);
+    writeToSock(sock, outData);
+
+    ReadFileResponse inData = (ReadFileResponse) readFromSock(sock);
+
+    sock.close();
+    System.arraycopy(inData.data, 0, data, 0, inData.bytesRead);
+    return inData.bytesRead;
   }
 
   /* close file. */
