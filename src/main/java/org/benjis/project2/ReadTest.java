@@ -9,12 +9,23 @@ public class ReadTest {
 
 	public static void main(String[] args) throws java.lang.InterruptedException, java.io.IOException {
 
-		String Filename = "127.0.0.1:7777/largedata.txt"; // file to read
+		String host = "localhost";
+		int port = 8080;
+		String path = "largedata.txt";
 
-		String localhost = "localhost";
-		int portNum = 7777;
+		if (args.length > 0) {
+			host = args[0];
+		}
+		if (args.length > 1) {
+			port = Integer.parseInt(args[1]);
+		}
+		if (args.length > 2) {
+			path = args[2];
+		}
 
-		System.out.println("Defalt IP: localhost; Default Server PortNum: 7777");
+		String Filename = String.format("%s:%d/%s", host, port, path); // file to read
+
+		System.out.println("Getting url " + Filename);
 
 		/*
 		 * Initialise the client-side file system. The following line should be replaced
@@ -22,7 +33,7 @@ public class ReadTest {
 		 * version.
 		 */
 
-		FileSystemAPI fs = new FileSystem();
+		FileSystemAPI fs = new NetworkFileSystem();
 
 		FileHandle fh = fs.open(Filename);
 
@@ -41,6 +52,11 @@ public class ReadTest {
 
 			// open file.
 			fh = fs.open(Filename);
+
+			if (fh == null) {
+				System.out.println("File not found");
+				return;
+			}
 
 			// read the whole file, check the time needed.
 			startTime = Calendar.getInstance().getTime().getTime();
