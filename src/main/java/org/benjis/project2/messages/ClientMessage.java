@@ -16,4 +16,9 @@ public class ClientMessage implements Serializable {
         this.verb = "write";
         this.obj = o;
     }
+
+    public ClientMessage(LookupFileRequest o) {
+        this.verb = "lookup";
+        this.obj = o;
+    }
 }

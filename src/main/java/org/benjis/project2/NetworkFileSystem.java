@@ -10,6 +10,8 @@ import java.net.Socket;
 import java.util.Hashtable;
 
 import org.benjis.project2.messages.ClientMessage;
+import org.benjis.project2.messages.LookupFileRequest;
+import org.benjis.project2.messages.LookupFileResponse;
 import org.benjis.project2.messages.ReadFileRequest;
 import org.benjis.project2.messages.ReadFileResponse;
 import org.benjis.project2.messages.WriteFileRequest;
@@ -44,16 +46,6 @@ public class NetworkFileSystem implements FileSystemAPI {
     }
   }
 
-  // url format is "ip:port/path"
-  public FileHandle open(String url) throws FileNotFoundException {
-    FileHandle fh = new FileHandle();
-    FileData nfsUrl = new FileData(url);
-
-    fileHandlesToData.put(fh, nfsUrl);
-
-    return fh;
-  }
-
   private void writeToSock(Socket sock, ClientMessage m) throws IOException {
     ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
     out.writeObject(m);
@@ -74,6 +66,37 @@ public class NetworkFileSystem implements FileSystemAPI {
     // }
   }
 
+  // url format is "ip:port/path"
+  public FileHandle open(String url) throws FileNotFoundException {
+    FileData fileData = new FileData(url);
+    Socket sock = null;
+    try {
+      sock = fileData.getSocket();
+      LookupFileRequest outData = new LookupFileRequest(fileData.path);
+      writeToSock(sock, new ClientMessage(outData));
+
+      LookupFileResponse inData = readFromSock(sock);
+
+      if (inData.exists) {
+        FileHandle fh = new FileHandle();
+        fileHandlesToData.put(fh, fileData);
+        return fh;
+      }
+    } catch (IOException ex) {
+      System.out.println("open: IO error");
+    } finally {
+      if (sock != null) {
+        try {
+          sock.close();
+        } catch (IOException ex) {
+          System.out.println("ouch! things are messed up");
+        }
+      }
+    }
+
+    return null;
+  }
+
   /* write is not implemented. */
   public boolean write(FileHandle fh, byte[] data) throws IOException {
     FileData fileData = fileHandlesToData.get(fh);
@@ -90,7 +113,8 @@ public class NetworkFileSystem implements FileSystemAPI {
       System.out.println("write(): network error");
       return false;
     } finally {
-      sock.close();
+      if (sock != null)
+        sock.close();
     }
   }
 
