@@ -1,7 +1,5 @@
 package org.benjis.project2;
 
-/* You can change implementation as you like. This is a simple one. */
-
 public class FileHandle {
     /*
      * The "filehandle" is simply an integer. We keep a counter in a static variable
@@ -16,20 +14,27 @@ public class FileHandle {
         index = cnt++;
     }
 
+    // Is this handle still valid?
     public boolean isAlive() {
         return (this.index != 0);
     }
 
-    /* checks two handles are equal or not. */
-    public boolean Equals(FileHandle fh) {
-        return (fh.index == this.index);
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof FileHandle) {
+            FileHandle fh = (FileHandle) o;
+            return (fh.index == this.index);
+        } else {
+            return false;
+        }
     }
 
-    /* discarding a filehandle. you do not have to use this. */
+    // Invalidate this handle
     public void discard() {
         index = 0;
     }
 
+    @Override
     public String toString() {
         return index + "/" + (cnt - 1);
     }

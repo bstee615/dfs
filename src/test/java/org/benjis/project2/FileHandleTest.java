@@ -22,10 +22,10 @@ public class FileHandleTest {
         fh2 = new FileHandle();
         assertTrue(fh2.isAlive());
 
-        assertTrue(!fh1.Equals(fh2));
+        assertTrue(!fh1.equals(fh2));
 
         fh1.discard();
         fh2.discard();
-        assertTrue(fh1.Equals(fh2));
+        assertTrue(fh1.equals(fh2));
     }
 }
