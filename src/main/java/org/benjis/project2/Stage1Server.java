@@ -49,7 +49,7 @@ class Server {
             bytesRead = 0;
         in.close();
 
-        return new ReadFileResponse(bytesRead, data);
+        return new ReadFileResponse(bytesRead, data, getTS(req.filename));
     }
 
     // Helper method for handling a write()
@@ -97,11 +97,11 @@ class Server {
         } else {
             System.out.println("failure");
         }
-        return new WriteFileResponse(success);
+        return new WriteFileResponse(success, getTS(req.filename));
     }
 
     // Handle lookup()
-    private LookupFileResponse handle(LookupFileRequest req) {
+    private LookupFileResponse handle(LookupFileRequest req) throws IOException {
         System.out.println("Looking up file " + req.filename);
         File file = new File(req.filename);
         boolean exists = file.exists();
@@ -109,12 +109,16 @@ class Server {
         if (exists) {
             length = (int) file.length();
         }
-        return new LookupFileResponse(exists, length);
+        return new LookupFileResponse(exists, length, getTS(req.filename));
     }
 
     // Handle getattr()
-    private GetAttributeFileResponse handle(GetAttributeFileRequest req) {
-        return new GetAttributeFileResponse();
+    private GetAttributeFileResponse handle(GetAttributeFileRequest req) throws IOException {
+        return new GetAttributeFileResponse(getTS(req.filename));
+    }
+
+    private long getTS(String filename) throws IOException {
+        return new File(filename).lastModified();
     }
 
     // Switch to handle requests from the client.

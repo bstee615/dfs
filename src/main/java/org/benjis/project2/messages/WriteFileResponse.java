@@ -1,15 +1,15 @@
 package org.benjis.project2.messages;
 
 import java.io.Serializable;
-import java.util.Date;
 
 // res = (success, ts)
 public class WriteFileResponse implements Serializable {
     private static final long serialVersionUID = 1L;
     public boolean success;
-    public Date ts;
+    public long ts;
 
-    public WriteFileResponse(boolean success) {
+    public WriteFileResponse(boolean success, long ts) {
         this.success = success;
+        this.ts = ts;
     }
 }
