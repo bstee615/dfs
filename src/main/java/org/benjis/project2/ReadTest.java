@@ -60,11 +60,10 @@ public class ReadTest {
 
 			// read the whole file, check the time needed.
 			startTime = Calendar.getInstance().getTime().getTime();
-			int res;
 			while (!fs.isEOF(fh)) {
 
 				// read data.
-				res = fs.read(fh, data);
+				fs.read(fh, data);
 
 			}
 			endTime = Calendar.getInstance().getTime().getTime();

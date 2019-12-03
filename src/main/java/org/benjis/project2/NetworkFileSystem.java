@@ -1,5 +1,6 @@
 package org.benjis.project2;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -42,7 +43,13 @@ public class NetworkFileSystem implements FileSystemAPI {
       this.ip = new InetSocketAddress(addr, port);
 
       String path = url.substring(slashIndex + 1);
-      // TODO: Check format
+      File file = new File(path);
+      if (path.contains("/") || path.contains("\\")) {
+        throw new IllegalArgumentException("URL must be a file name without a directory path.");
+      }
+      if (file.isDirectory()) {
+        throw new IllegalArgumentException("URL must not point to a directory.");
+      }
       this.path = path;
 
       this.position = 0;
@@ -88,7 +95,14 @@ public class NetworkFileSystem implements FileSystemAPI {
   // Get info from the server and store the handle for a file.
   // url format is "ip:port/path"
   public FileHandle open(String url) throws FileNotFoundException {
-    FileData fileData = new FileData(url);
+    FileData fileData;
+    try {
+      fileData = new FileData(url);
+    } catch (IllegalArgumentException ex) {
+      System.out.println("Error opening file: " + ex.getMessage());
+      return null;
+    }
+
     Socket sock = null;
     try {
       sock = getSocket(fileData);
