@@ -13,14 +13,16 @@ import java.net.URLConnection;
 import java.util.Hashtable;
 
 public class NetworkFileSystem implements FileSystemAPI {
-  private Hashtable<FileHandle, NFSUrl> fhToUrl;
+  private Hashtable<FileHandle, FileData> fhToUrl;
 
-  private class NFSUrl {
+  private class FileData {
     public String ip;
     public String port;
     public String path;
 
-    public NFSUrl(String url) {
+    public int position;
+
+    public FileData(String url) {
       int colonIndex = url.indexOf(":");
       int slashIndex = url.indexOf("/");
       String ip = url.substring(0, colonIndex);
@@ -32,22 +34,23 @@ public class NetworkFileSystem implements FileSystemAPI {
       this.ip = ip;
       this.port = port;
       this.path = path;
+
+      this.position = 0;
     }
   }
 
   // url format is "ip:port/path"
   public FileHandle open(String url) throws FileNotFoundException {
     FileHandle fh = new FileHandle();
-    NFSUrl nfsUrl = new NFSUrl(url);
+    FileData nfsUrl = new FileData(url);
 
     fhToUrl.put(fh, nfsUrl);
 
     return fh;
   }
 
-  private URLConnection getURLConnection(FileHandle fh) throws IOException {
-    NFSUrl nfsUrl = fhToUrl.get(fh);
-    URL netUrl = new URL(nfsUrl.ip + ":" + nfsUrl.port + "/" + nfsUrl.path);
+  private URLConnection getURLConnection(FileData fileData) throws IOException {
+    URL netUrl = new URL(fileData.ip + ":" + fileData.port + "/" + fileData.path);
 
     URLConnection con = netUrl.openConnection();
     con.setDoOutput(true);
@@ -56,7 +59,8 @@ public class NetworkFileSystem implements FileSystemAPI {
 
   /* write is not implemented. */
   public boolean write(FileHandle fh, byte[] data) throws IOException {
-    URLConnection con = getURLConnection(fh);
+    FileData fileData = fhToUrl.get(fh);
+    URLConnection con = getURLConnection(fileData);
 
     try {
       BufferedWriter outWriter = new BufferedWriter(new OutputStreamWriter(con.getOutputStream()));
@@ -78,7 +82,8 @@ public class NetworkFileSystem implements FileSystemAPI {
 
   /* read bytes from the current position. returns the number of bytes read. */
   public int read(FileHandle fh, byte[] data) throws IOException {
-    URLConnection con = getURLConnection(fh);
+    FileData fileData = fhToUrl.get(fh);
+    URLConnection con = getURLConnection(fileData);
 
     return con.getInputStream().read(data);
   }
