@@ -135,8 +135,8 @@ class Server {
     public void start(InetAddress addr, int port) throws IOException {
         serverSocket = new ServerSocket(port, 50, addr);
         Path currentRelativePath = Paths.get("");
-        System.out.println("Serving at " + addr.toString() + ":" + port + " at path "
-                + currentRelativePath.toAbsolutePath().toString());
+        System.out.println(String.format("Serving at %s:%d at path %s. Press CTRL+C to quit.", addr.toString(), port,
+                currentRelativePath.toAbsolutePath().toString()));
 
         while (true) {
             clientSocket = serverSocket.accept();
@@ -184,7 +184,7 @@ public class Stage1Server {
     public static void main(String[] args) {
         Server server = new Server();
         try {
-            server.start(InetAddress.getByName("127.0.0.1"), 6666);
+            server.start(InetAddress.getByName(args[0]), Integer.parseInt(args[1]));
         } catch (IOException ex) {
             System.out.println("Some error: " + ex.getMessage());
         }

@@ -6,14 +6,20 @@ import java.util.Scanner;
 
 public class FileSystemTest {
 
-	private final static String host = "localhost";
-	private final static int port = 6666;
+	private static String host = "localhost";
+	private static int port = 6666;
 
 	public static void main(String[] args) throws UnknownHostException, IOException {
+		if (args.length > 0) {
+			host = args[0];
+		}
+		if (args.length > 1) {
+			port = Integer.parseInt(args[1]);
+		}
 
 		byte[] data = new byte[100];
 
-		System.out.println("Defalt IP: " + host + "; Default Server PortNum: " + port);
+		System.out.println("IP: " + host + "; port: " + port);
 		Scanner scan = new Scanner(System.in);
 
 		System.out.println("Please specify filename to Open: ");

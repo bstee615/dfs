@@ -1,1 +1,1 @@
-mvn exec:java -Dexec.mainClass="org.benjis.project2.%1"
+mvn exec:java -Dexec.mainClass="org.benjis.project2.%1" -Dexec.args=%2
