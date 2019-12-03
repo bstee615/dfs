@@ -29,4 +29,8 @@ public class FileHandle {
     public void discard() {
         index = 0;
     }
+
+    public String toString() {
+        return index + "/" + (cnt - 1);
+    }
 }

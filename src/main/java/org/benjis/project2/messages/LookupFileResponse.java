@@ -8,4 +8,9 @@ public class LookupFileResponse implements Serializable {
     public Date lastModifiedTime;
     public boolean exists;
     public int size;
+
+    public LookupFileResponse(boolean exists, int size) {
+        this.exists = exists;
+        this.size = size;
+    }
 }

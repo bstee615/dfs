@@ -20,6 +20,10 @@ import org.benjis.project2.messages.WriteFileResponse;
 public class NetworkFileSystem implements FileSystemAPI {
   private Hashtable<FileHandle, FileData> fileHandlesToData;
 
+  public NetworkFileSystem() {
+    this.fileHandlesToData = new Hashtable<>();
+  }
+
   private class FileData {
     public InetSocketAddress ip;
     public String path;
@@ -94,7 +98,7 @@ public class NetworkFileSystem implements FileSystemAPI {
         return fh;
       }
     } catch (IOException ex) {
-      System.out.println("open: IO error");
+      System.out.println("open: " + ex.getMessage());
     } finally {
       if (sock != null) {
         try {

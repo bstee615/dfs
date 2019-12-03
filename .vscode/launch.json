@@ -2,6 +2,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - Stage1Server",
+            "request": "launch",
+            "mainClass": "org.benjis.project2.Stage1Server",
+            "projectName": "project2"
+        },
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Stage1Client",
+            "request": "launch",
+            "mainClass": "org.benjis.project2.Stage1Client",
+            "projectName": "project2"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - checkfh",
             "request": "launch",
             "mainClass": "org.benjis.project2.checkfh",

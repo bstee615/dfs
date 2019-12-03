@@ -26,7 +26,7 @@ class Server {
     private ObjectInputStream in;
 
     private ReadFileResponse handle(ReadFileRequest req) {
-        throw new UnsupportedOperationException("not implemented");
+        return new ReadFileResponse(0, null);
     }
 
     private WriteFileResponse handle(WriteFileRequest req) {
@@ -34,11 +34,13 @@ class Server {
     }
 
     private LookupFileResponse handle(LookupFileRequest req) {
-        throw new UnsupportedOperationException("not implemented");
+        return new LookupFileResponse(true, 10);
     }
 
     private void handle(ClientMessage m) throws IOException {
         Serializable response;
+
+        System.out.println("Received verb \"" + m.verb + "\"");
 
         switch (m.verb) {
         case "read":
@@ -63,16 +65,25 @@ class Server {
 
     public void start(InetAddress addr, int port) throws IOException {
         serverSocket = new ServerSocket(port, 50, addr);
+        System.out.println("Serving at " + addr.toString() + ":" + port);
+
         clientSocket = serverSocket.accept();
         out = new ObjectOutputStream(clientSocket.getOutputStream());
         in = new ObjectInputStream(clientSocket.getInputStream());
 
-        while (true) {
+        while (clientSocket.isConnected()) {
+            Object o = null;
             try {
-                ClientMessage m = (ClientMessage) in.readObject();
-                handle(m);
+                o = in.readObject();
             } catch (ClassNotFoundException ex) {
                 System.out.println(ex.getMessage());
+            } catch (IOException ex) {
+                break;
+            }
+
+            if (o != null) {
+                ClientMessage m = (ClientMessage) o;
+                handle(m);
             }
         }
     }

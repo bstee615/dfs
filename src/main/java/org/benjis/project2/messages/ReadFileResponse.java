@@ -8,4 +8,9 @@ public class ReadFileResponse implements Serializable {
     public int bytesRead;
     public Date lastModifiedTime;
     public byte[] data;
+
+    public ReadFileResponse(int bytesRead, byte[] data) {
+        this.bytesRead = bytesRead;
+        this.data = data;
+    }
 }
