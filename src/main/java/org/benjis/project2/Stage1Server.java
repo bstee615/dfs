@@ -1,6 +1,9 @@
 package org.benjis.project2;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -9,6 +12,10 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.benjis.project2.messages.ClientMessage;
 import org.benjis.project2.messages.LookupFileRequest;
@@ -25,8 +32,21 @@ class Server {
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
-    private ReadFileResponse handle(ReadFileRequest req) {
-        return new ReadFileResponse(0, null);
+    private ReadFileResponse handle(ReadFileRequest req) throws IOException {
+        File file = new File(req.path);
+        // if (!file.exists()) {
+        // Handle it
+        // }
+
+        FileInputStream in = new FileInputStream(file);
+        // It's fine if we set the position past EOF,
+        // since a consequent read will just return empty.
+        in.getChannel().position(req.position);
+        byte[] data = new byte[req.n];
+        int bytesRead = in.read(data);
+        in.close();
+
+        return new ReadFileResponse(bytesRead, data);
     }
 
     private WriteFileResponse handle(WriteFileRequest req) {
@@ -34,7 +54,14 @@ class Server {
     }
 
     private LookupFileResponse handle(LookupFileRequest req) {
-        return new LookupFileResponse(true, 10);
+        System.out.println("Looking up file " + req.path);
+        File file = new File(req.path);
+        boolean exists = file.exists();
+        int length = 0;
+        if (exists) {
+            length = (int) file.length();
+        }
+        return new LookupFileResponse(exists, length);
     }
 
     private void handle(ClientMessage m) throws IOException {
@@ -60,31 +87,47 @@ class Server {
 
         if (response != null) {
             out.writeObject(response);
+            System.out.println("wrote response");
         }
     }
 
     public void start(InetAddress addr, int port) throws IOException {
         serverSocket = new ServerSocket(port, 50, addr);
-        System.out.println("Serving at " + addr.toString() + ":" + port);
+        Path currentRelativePath = Paths.get("");
+        System.out.println("Serving at " + addr.toString() + ":" + port + " at path "
+                + currentRelativePath.toAbsolutePath().toString());
 
-        clientSocket = serverSocket.accept();
-        out = new ObjectOutputStream(clientSocket.getOutputStream());
-        in = new ObjectInputStream(clientSocket.getInputStream());
+        while (true) {
+            clientSocket = serverSocket.accept();
+            out = new ObjectOutputStream(clientSocket.getOutputStream());
+            in = new ObjectInputStream(clientSocket.getInputStream());
 
-        while (clientSocket.isConnected()) {
-            Object o = null;
             try {
-                o = in.readObject();
-            } catch (ClassNotFoundException ex) {
-                System.out.println(ex.getMessage());
-            } catch (IOException ex) {
-                break;
-            }
+                Object o = null;
+                // Read objects until they stop sending them.
+                try {
+                    // while
+                    if (/* clientSocket.isConnected() && */(o = in.readObject()) != null) {
+                        ClientMessage m = (ClientMessage) o;
+                        handle(m);
+                    }
+                } catch (ClassNotFoundException ex) {
+                    System.out.println(ex.getMessage());
+                }
 
-            if (o != null) {
-                ClientMessage m = (ClientMessage) o;
-                handle(m);
+                System.out.println("Client disconnected. Accepting connections...");
             }
+            // catch (SocketException ex) {
+            //     if (ex.getMessage().equals("Connection reset")) {
+            //         // Silently reset for a new client
+            //     } else {
+            //         throw ex;
+            //     }
+            // }
+
+            in.close();
+            out.close();
+            clientSocket.close();
         }
     }
 

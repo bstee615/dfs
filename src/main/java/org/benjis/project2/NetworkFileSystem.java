@@ -138,7 +138,7 @@ public class NetworkFileSystem implements FileSystemAPI {
     FileData fileData = getFileData(fh);
     Socket sock = getSocket(fileData);
 
-    ReadFileRequest outData = new ReadFileRequest(fileData.path);
+    ReadFileRequest outData = new ReadFileRequest(fileData.path, fileData.position, data.length);
     writeToSock(sock, new ClientMessage(outData));
 
     ReadFileResponse inData = readFromSock(sock);
