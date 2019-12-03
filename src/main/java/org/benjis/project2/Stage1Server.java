@@ -22,6 +22,7 @@ import org.benjis.project2.messages.ReadFileResponse;
 import org.benjis.project2.messages.WriteFileRequest;
 import org.benjis.project2.messages.WriteFileResponse;
 
+// A server to implement the protocol for network file access.
 // https://www.baeldung.com/a-guide-to-java-sockets
 class Server {
     private ServerSocket serverSocket;
@@ -29,6 +30,7 @@ class Server {
     private ObjectOutputStream out;
     private ObjectInputStream in;
 
+    // Handle a read() request.
     private ReadFileResponse handle(ReadFileRequest req) throws IOException {
         File file = new File(req.filename);
         // if (!file.exists()) {
@@ -48,6 +50,7 @@ class Server {
         return new ReadFileResponse(bytesRead, data);
     }
 
+    // Helper method for handling a write()
     private boolean writeHelper(WriteFileRequest req) throws IOException {
         File file = new File(req.filename);
         if (!file.exists()) {
@@ -83,6 +86,7 @@ class Server {
         }
     }
 
+    // Handle a write() request.
     private WriteFileResponse handle(WriteFileRequest req) throws IOException {
         System.out.println("Writing \"" + new String(req.data) + "\" to " + req.filename);
         boolean success = writeHelper(req);
@@ -94,6 +98,7 @@ class Server {
         return new WriteFileResponse(success);
     }
 
+    // Handle lookup()
     private LookupFileResponse handle(LookupFileRequest req) {
         System.out.println("Looking up file " + req.filename);
         File file = new File(req.filename);
@@ -105,6 +110,7 @@ class Server {
         return new LookupFileResponse(exists, length);
     }
 
+    // Switch to handle requests from the client.
     private void handle(ClientMessage m) throws IOException {
         Serializable response;
 
@@ -128,10 +134,10 @@ class Server {
 
         if (response != null) {
             out.writeObject(response);
-            // System.out.println("wrote response");
         }
     }
 
+    // Start the server and serve requests until the cows come home.
     public void start(InetAddress addr, int port) throws IOException {
         serverSocket = new ServerSocket(port, 50, addr);
         Path currentRelativePath = Paths.get("");
@@ -143,12 +149,9 @@ class Server {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             in = new ObjectInputStream(clientSocket.getInputStream());
 
-            // try {
             Object o = null;
-            // Read objects until they stop sending them.
             try {
-                // while
-                if (/* clientSocket.isConnected() && */(o = in.readObject()) != null) {
+                if ((o = in.readObject()) != null) {
                     ClientMessage m = (ClientMessage) o;
                     handle(m);
                 }
@@ -157,14 +160,6 @@ class Server {
             }
 
             System.out.println("Client disconnected. Accepting connections...");
-            // }
-            // catch (SocketException ex) {
-            // if (ex.getMessage().equals("Connection reset")) {
-            // // Silently reset for a new client
-            // } else {
-            // throw ex;
-            // }
-            // }
 
             in.close();
             out.close();
@@ -172,6 +167,7 @@ class Server {
         }
     }
 
+    // Stop the server and shutdown all resources.
     public void stop() throws IOException {
         in.close();
         out.close();
@@ -180,8 +176,13 @@ class Server {
     }
 }
 
+// A thin wrapper to run the server.
 public class Stage1Server {
     public static void main(String[] args) {
+        if (args.length < 2) {
+            System.out.println("Usage: Stage1Server <host> <port>");
+        }
+
         Server server = new Server();
         try {
             server.start(InetAddress.getByName(args[0]), Integer.parseInt(args[1]));
