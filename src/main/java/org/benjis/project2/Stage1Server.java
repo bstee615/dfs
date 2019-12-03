@@ -15,6 +15,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.benjis.project2.messages.ClientMessage;
+import org.benjis.project2.messages.GetAttributeFileRequest;
+import org.benjis.project2.messages.GetAttributeFileResponse;
 import org.benjis.project2.messages.LookupFileRequest;
 import org.benjis.project2.messages.LookupFileResponse;
 import org.benjis.project2.messages.ReadFileRequest;
@@ -110,6 +112,11 @@ class Server {
         return new LookupFileResponse(exists, length);
     }
 
+    // Handle getattr()
+    private GetAttributeFileResponse handle(GetAttributeFileRequest req) {
+        return new GetAttributeFileResponse();
+    }
+
     // Switch to handle requests from the client.
     private void handle(ClientMessage m) throws IOException {
         Serializable response;
@@ -125,6 +132,9 @@ class Server {
             break;
         case "lookup":
             response = handle((LookupFileRequest) m.obj);
+            break;
+        case "getattr":
+            response = handle((GetAttributeFileRequest) m.obj);
             break;
         default:
             System.out.println("Unknown verb " + m.verb);
