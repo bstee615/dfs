@@ -2,17 +2,18 @@ package org.benjis.project2.messages;
 
 import java.io.Serializable;
 
+// write(filename, offset, data)
 public class WriteFileRequest implements Serializable {
     private static final long serialVersionUID = 1L;
-    public String path;
+    public String filename;
     public byte[] data;
-    public int position;
+    public int offset;
     public int length;
 
     public WriteFileRequest(String path, byte[] data, int position, int length) {
-        this.path = path;
+        this.filename = path;
         this.data = data;
-        this.position = position;
+        this.offset = position;
         this.length = length;
     }
 }

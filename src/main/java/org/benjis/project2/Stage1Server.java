@@ -30,7 +30,7 @@ class Server {
     private ObjectInputStream in;
 
     private ReadFileResponse handle(ReadFileRequest req) throws IOException {
-        File file = new File(req.path);
+        File file = new File(req.filename);
         // if (!file.exists()) {
         // Handle it
         // }
@@ -38,7 +38,7 @@ class Server {
         FileInputStream in = new FileInputStream(file);
         // It's fine if we set the position past EOF,
         // since a consequent read will just return empty.
-        in.getChannel().position(req.position);
+        in.getChannel().position(req.offset);
         byte[] data = new byte[req.n];
         int bytesRead = in.read(data);
         if (bytesRead == -1)
@@ -49,7 +49,7 @@ class Server {
     }
 
     private boolean writeHelper(WriteFileRequest req) throws IOException {
-        File file = new File(req.path);
+        File file = new File(req.filename);
         if (!file.exists()) {
             return false;
         }
@@ -62,7 +62,7 @@ class Server {
                 in = new FileInputStream(file);
                 fileContents = new byte[(int) file.length()];
                 int bytesSaved = in.read(fileContents);
-                if (bytesSaved < req.position - 1) {
+                if (bytesSaved < req.offset - 1) {
                     return false;
                 }
             } finally {
@@ -70,10 +70,10 @@ class Server {
             }
 
             FileOutputStream out = new FileOutputStream(file);
-            out.write(fileContents, 0, req.position - 1);
+            out.write(fileContents, 0, req.offset - 1);
             out.write(req.data);
-            if (req.position + req.length < fileContents.length) {
-                out.write(fileContents, req.position + req.length, fileContents.length - (req.position + req.length));
+            if (req.offset + req.length < fileContents.length) {
+                out.write(fileContents, req.offset + req.length, fileContents.length - (req.offset + req.length));
             }
             out.close();
 
@@ -84,7 +84,7 @@ class Server {
     }
 
     private WriteFileResponse handle(WriteFileRequest req) throws IOException {
-        System.out.println("Writing \"" + new String(req.data) + "\" to " + req.path);
+        System.out.println("Writing \"" + new String(req.data) + "\" to " + req.filename);
         boolean success = writeHelper(req);
         if (success) {
             System.out.println("success");
@@ -95,8 +95,8 @@ class Server {
     }
 
     private LookupFileResponse handle(LookupFileRequest req) {
-        System.out.println("Looking up file " + req.path);
-        File file = new File(req.path);
+        System.out.println("Looking up file " + req.filename);
+        File file = new File(req.filename);
         boolean exists = file.exists();
         int length = 0;
         if (exists) {

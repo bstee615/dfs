@@ -91,7 +91,7 @@ public class NetworkFileSystem implements FileSystemAPI {
 
       LookupFileResponse inData = readFromSock(sock);
 
-      if (inData.exists) {
+      if (inData.fileExists) {
         fileData.length = inData.size;
         FileHandle fh = new FileHandle();
         fileHandlesToData.put(fh, fileData);
@@ -151,9 +151,9 @@ public class NetworkFileSystem implements FileSystemAPI {
     ReadFileResponse inData = readFromSock(sock);
 
     sock.close();
-    System.arraycopy(inData.data, 0, data, 0, inData.bytesRead);
-    fileData.position += inData.bytesRead;
-    return inData.bytesRead;
+    System.arraycopy(inData.bytesRead, 0, data, 0, inData.numBytesRead);
+    fileData.position += inData.numBytesRead;
+    return inData.numBytesRead;
   }
 
   /* close file. This will always return true until stage 2. */
