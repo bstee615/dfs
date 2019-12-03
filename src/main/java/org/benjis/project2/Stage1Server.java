@@ -158,6 +158,7 @@ class Server {
         System.out.println(String.format("Serving at %s:%d at path %s. Press CTRL+C to quit.", addr.toString(), port,
                 currentRelativePath.toAbsolutePath().toString()));
 
+        // Loop until Ctrl+C is pressed.
         while (true) {
             clientSocket = serverSocket.accept();
             out = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -195,6 +196,7 @@ public class Stage1Server {
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Usage: Stage1Server <host> <port>");
+            return;
         }
 
         Server server = new Server();
