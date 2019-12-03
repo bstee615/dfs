@@ -6,15 +6,14 @@ import java.util.Scanner;
 
 public class FileSystemTest {
 
-	private final static String localhost = "localhost";
-	private final static int portNum = 7777;
+	private final static String host = "localhost";
+	private final static int port = 6666;
 
 	public static void main(String[] args) throws UnknownHostException, IOException {
 
-		int res;
 		byte[] data = new byte[100];
 
-		System.out.println("Defalt IP: localhost; Default Server PortNum: 7777");
+		System.out.println("Defalt IP: " + host + "; Default Server PortNum: " + port);
 		Scanner scan = new Scanner(System.in);
 
 		System.out.println("Please specify filename to Open: ");
@@ -26,17 +25,17 @@ public class FileSystemTest {
 		 * version.
 		 */
 
-		FileSystemAPI fs = new FileSystem();
+		FileSystemAPI fs = new NetworkFileSystem();
 
-		String url = "127.0.0.1:7777/" + fileName;
+		String url = String.format("%s:%s/%s", host, port, fileName);
 		FileHandle fh = fs.open(url);
 
 		System.out.println("Start reading file...");
 		while (!fs.isEOF(fh)) {
 
 			// read data.
-			res = fs.read(fh, data);
-
+			int res = fs.read(fh, data);
+			System.out.println("Read " + res + " bytes.");
 		}
 		System.out.println("Done reading file...");
 
@@ -47,11 +46,16 @@ public class FileSystemTest {
 			contents = contents + "\n";
 			byte[] toWrite = contents.getBytes();
 			boolean write_res = fs.write(fh, toWrite);
-			System.out.println("Data is written to file");
+			if (write_res) {
+				System.out.println("Data is written to file");
+			} else {
+				System.out.println("Could not write to file");
+			}
 			System.out.println("Please enter data to write to file or 'q' to stop");
 			contents = scan.nextLine();
 		}
 
+		scan.close();
 		fs.close(fh);
 		return;
 

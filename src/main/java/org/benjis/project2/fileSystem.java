@@ -10,7 +10,7 @@ import java.util.*;
 
 public class FileSystem implements FileSystemAPI {
   /* It needs a table relating filehandles and real files. */
-  Hashtable tbl = new Hashtable();
+  Hashtable<FileHandle, FileInputStream> tbl = new Hashtable<>();
 
   /* url SHOULD HAVE form IP:port/path, but here simply a file name. */
 
@@ -43,7 +43,7 @@ public class FileSystem implements FileSystemAPI {
 
   /* check if it is the end-of-file. */
   public boolean isEOF(FileHandle fh) throws java.io.IOException {
-    byte[] dummy = { 0 };
+    // byte[] dummy = { 0 };
     return (((FileInputStream) tbl.get(fh)).available() == 0);
   }
 }
