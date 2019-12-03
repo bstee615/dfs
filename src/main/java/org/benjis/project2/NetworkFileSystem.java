@@ -15,6 +15,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Hashtable;
 
+import org.benjis.project2.messages.ReadFileRequest;
+import org.benjis.project2.messages.ReadFileResponse;
+import org.benjis.project2.messages.WriteFileRequest;
+import org.benjis.project2.messages.WriteFileResponse;
+
 public class NetworkFileSystem implements FileSystemAPI {
   private Hashtable<FileHandle, FileData> fhToUrl;
 
@@ -52,37 +57,6 @@ public class NetworkFileSystem implements FileSystemAPI {
     fhToUrl.put(fh, nfsUrl);
 
     return fh;
-  }
-
-  private class WriteFileRequest implements Serializable {
-    private static final long serialVersionUID = 1L;
-    public String path;
-    public byte[] data;
-
-    public WriteFileRequest(String path, byte[] data) {
-      this.path = path;
-      this.data = data;
-    }
-  }
-
-  private class WriteFileResponse implements Serializable {
-    private static final long serialVersionUID = 1L;
-    public boolean success;
-  }
-
-  private class ReadFileRequest implements Serializable {
-    private static final long serialVersionUID = 1L;
-    public String path;
-
-    public ReadFileRequest(String path) {
-      this.path = path;
-    }
-  }
-
-  private class ReadFileResponse implements Serializable {
-    private static final long serialVersionUID = 1L;
-    public int bytesRead;
-    public byte[] data;
   }
 
   private void writeToSock(Socket sock, Object o) throws IOException {
