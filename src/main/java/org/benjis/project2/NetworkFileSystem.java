@@ -17,6 +17,7 @@ import org.benjis.project2.messages.ReadFileResponse;
 import org.benjis.project2.messages.WriteFileRequest;
 import org.benjis.project2.messages.WriteFileResponse;
 
+// An implementation of FileSystemAPI for access over the Internet.
 public class NetworkFileSystem implements FileSystemAPI {
   private Hashtable<FileHandle, FileData> fileHandlesToData;
 
@@ -24,6 +25,7 @@ public class NetworkFileSystem implements FileSystemAPI {
     this.fileHandlesToData = new Hashtable<>();
   }
 
+  // A bag of data about each open file handle.
   private class FileData {
     public InetSocketAddress ip;
     public String path;
@@ -48,16 +50,18 @@ public class NetworkFileSystem implements FileSystemAPI {
     }
   }
 
+  // A utility method to create a socket for an open file.
   private Socket getSocket(FileData fd) throws IOException {
     return new Socket(fd.ip.getAddress(), fd.ip.getPort());
   }
 
+  // A utility method to write a request to the server.
   private void writeToSock(Socket sock, ClientMessage m) throws IOException {
     ObjectOutputStream out = new ObjectOutputStream(sock.getOutputStream());
     out.writeObject(m);
-    // out.close();
   }
 
+  // A utility method to read a response from the server.
   @SuppressWarnings("unchecked")
   private <T extends Serializable> T readFromSock(Socket sock) throws IOException {
     ObjectInputStream in = new ObjectInputStream(sock.getInputStream());
@@ -67,12 +71,13 @@ public class NetworkFileSystem implements FileSystemAPI {
       System.out.println(ex.getMessage());
       return null;
     }
-    // finally {
-    // in.close();
-    // }
   }
 
+  // Get data about an open file.
   FileData getFileData(FileHandle fh) {
+    if (!fh.isAlive()) {
+      System.out.println("Invalid handle");
+    }
     FileData fd = fileHandlesToData.get(fh);
     if (fd.length == null) {
       System.out.println("Uninitialized FileData");
@@ -80,6 +85,7 @@ public class NetworkFileSystem implements FileSystemAPI {
     return fd;
   }
 
+  // Get info from the server and store the handle for a file.
   // url format is "ip:port/path"
   public FileHandle open(String url) throws FileNotFoundException {
     FileData fileData = new FileData(url);
@@ -112,7 +118,7 @@ public class NetworkFileSystem implements FileSystemAPI {
     return null;
   }
 
-  /* write is not implemented. */
+  // Write data to a file, starting from the current position.
   public boolean write(FileHandle fh, byte[] data) throws IOException {
     FileData fileData = getFileData(fh);
     Socket sock = getSocket(fileData);
@@ -140,7 +146,7 @@ public class NetworkFileSystem implements FileSystemAPI {
     return success;
   }
 
-  /* read bytes from the current position. returns the number of bytes read. */
+  // Read data from a file, starting from the current position.
   public int read(FileHandle fh, byte[] data) throws IOException {
     FileData fileData = getFileData(fh);
     Socket sock = getSocket(fileData);
@@ -156,18 +162,20 @@ public class NetworkFileSystem implements FileSystemAPI {
     return inData.numBytesRead;
   }
 
-  /* close file. This will always return true until stage 2. */
+  // Close an open file.
   public boolean close(FileHandle fh) throws IOException {
-    fh.discard();
-    fileHandlesToData.remove(fh);
-    return true;
+    if (fh.isAlive()) {
+      fh.discard();
+      fileHandlesToData.remove(fh);
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  /* check if it is the end-of-file. */
+  // Check the server for if a file is EOF.
   public boolean isEOF(FileHandle fh) throws IOException {
     FileData fileData = getFileData(fh);
-    // TODO: Make sure this is equal only,
-    // otherwise we'll probably have an error sometime.
     return fileData.position >= fileData.length;
   }
 }
