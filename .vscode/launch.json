@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - FileSystemTest",
+            "request": "launch",
+            "mainClass": "org.benjis.project2.FileSystemTest",
+            "projectName": "project2"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - Stage1Server",
             "request": "launch",
             "mainClass": "org.benjis.project2.Stage1Server",

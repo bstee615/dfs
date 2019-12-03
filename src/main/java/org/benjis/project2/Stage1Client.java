@@ -1,7 +1,6 @@
 package org.benjis.project2;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class Stage1Client {
     public static void main(String[] args) {
