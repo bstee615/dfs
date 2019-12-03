@@ -25,7 +25,7 @@ public class NetworkFileSystem implements FileSystemAPI {
     public String path;
 
     public int position;
-    public int length;
+    public Integer length;
 
     public FileData(String url) {
       int colonIndex = url.indexOf(":");
@@ -42,10 +42,10 @@ public class NetworkFileSystem implements FileSystemAPI {
       this.position = 0;
       this.length = 0;
     }
+  }
 
-    public Socket getSocket() throws IOException {
-      return new Socket(ip.getAddress(), ip.getPort());
-    }
+  private Socket getSocket(FileData fd) throws IOException {
+    return new Socket(fd.ip.getAddress(), fd.ip.getPort());
   }
 
   private void writeToSock(Socket sock, ClientMessage m) throws IOException {
@@ -68,12 +68,20 @@ public class NetworkFileSystem implements FileSystemAPI {
     // }
   }
 
+  FileData getFileData(FileHandle fh) {
+    FileData fd = fileHandlesToData.get(fh);
+    if (fd.length == null) {
+      System.out.println("Uninitialized FileData");
+    }
+    return fd;
+  }
+
   // url format is "ip:port/path"
   public FileHandle open(String url) throws FileNotFoundException {
     FileData fileData = new FileData(url);
     Socket sock = null;
     try {
-      sock = fileData.getSocket();
+      sock = getSocket(fileData);
       LookupFileRequest outData = new LookupFileRequest(fileData.path);
       writeToSock(sock, new ClientMessage(outData));
 
@@ -102,8 +110,8 @@ public class NetworkFileSystem implements FileSystemAPI {
 
   /* write is not implemented. */
   public boolean write(FileHandle fh, byte[] data) throws IOException {
-    FileData fileData = fileHandlesToData.get(fh);
-    Socket sock = fileData.getSocket();
+    FileData fileData = getFileData(fh);
+    Socket sock = getSocket(fileData);
 
     try {
       WriteFileRequest outData = new WriteFileRequest(fileData.path, data, fileData.position, data.length);
@@ -123,8 +131,8 @@ public class NetworkFileSystem implements FileSystemAPI {
 
   /* read bytes from the current position. returns the number of bytes read. */
   public int read(FileHandle fh, byte[] data) throws IOException {
-    FileData fileData = fileHandlesToData.get(fh);
-    Socket sock = fileData.getSocket();
+    FileData fileData = getFileData(fh);
+    Socket sock = getSocket(fileData);
 
     ReadFileRequest outData = new ReadFileRequest(fileData.path);
     writeToSock(sock, new ClientMessage(outData));
@@ -145,7 +153,7 @@ public class NetworkFileSystem implements FileSystemAPI {
 
   /* check if it is the end-of-file. */
   public boolean isEOF(FileHandle fh) throws IOException {
-    FileData fileData = fileHandlesToData.get(fh);
+    FileData fileData = getFileData(fh);
     // TODO: Make sure this is equal only,
     // otherwise we'll probably have an error sometime.
     return fileData.position >= fileData.length;
